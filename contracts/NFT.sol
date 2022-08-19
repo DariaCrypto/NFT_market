@@ -7,8 +7,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 
 contract NFT is ERC721, ERC721URIStorage, AccessControl {
     bytes32 private constant MARKETPLACE_ROLE = keccak256("MARKETPLACE_ROLE");
-    bytes32 private constant EMERGENCY_ADMIN_ROLE =
-        keccak256("EMERGENCY_ADMIN_ROLE");
+    bytes32 private constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     address private _marketplaceAddress;
     event MarketplaceAddressChanged(address oldAddress, address newAddress);
@@ -17,11 +16,17 @@ contract NFT is ERC721, ERC721URIStorage, AccessControl {
         ERC721("RedSea", "RS")
     {
         _setupRole(MARKETPLACE_ROLE, marketplaceAddress);
-        _setupRole(EMERGENCY_ADMIN_ROLE, emergencyAdminAddress);
+        _setupRole(ADMIN_ROLE, emergencyAdminAddress);
 
         _marketplaceAddress = marketplaceAddress;
     }
 
+    /**
+     *@notice Create NFT to selected address
+     *@param to address where the NFT was create
+     *@param tokenId identifier token ERC721
+     *@param uri place where the NFT is located
+     **/
     function mint(
         address to,
         uint256 tokenId,
@@ -31,13 +36,21 @@ contract NFT is ERC721, ERC721URIStorage, AccessControl {
         _setTokenURI(tokenId, uri);
     }
 
+    /**
+     *@notice Destroy selected NFT
+     *@param tokenId identifier token ERC721
+     **/
     function burn(uint256 tokenId) external onlyRole(MARKETPLACE_ROLE) {
         _burn(tokenId);
     }
 
+    /**
+     *@notice Change marketplace address
+     *@param newMarketplaceAddress new address for change
+     **/
     function setMarketplaceAddress(address newMarketplaceAddress)
         external
-        onlyRole(EMERGENCY_ADMIN_ROLE)
+        onlyRole(ADMIN_ROLE)
     {
         emit MarketplaceAddressChanged(
             _marketplaceAddress,

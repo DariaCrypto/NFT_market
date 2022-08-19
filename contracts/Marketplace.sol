@@ -54,6 +54,11 @@ contract Marketplace is ReentrancyGuard, Ownable, IERC721Receiver {
         _;
     }
 
+    /**
+     *@notice Create item for sale
+     *@param tokenURI place where the NFT is located
+     *@param owner address where the NFT was create
+     **/
     function createItem(string memory tokenURI, address owner) external {
         ERC20Token.transferFrom(msg.sender, address(this), _mintPrice);
 
