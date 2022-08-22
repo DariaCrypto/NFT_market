@@ -113,8 +113,8 @@ describe("Marketplace", function () {
       expect(await Market.getNFT()).to.eq(ethers.constants.AddressZero);
     });
 
-    it("Check function upgradeMintPrice()", async () => {
-      await Market.upgradeMintPrice(1);
+    it("Check function setMintPrice()", async () => {
+      await Market.setMintPrice(1);
       expect(await Market.getMintPrice()).to.eq(1);
     });
 

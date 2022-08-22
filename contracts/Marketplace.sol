@@ -73,6 +73,11 @@ contract Marketplace is ReentrancyGuard, Ownable, IERC721Receiver {
         emit MarketItemCreated(tokenId, owner, block.timestamp);
     }
 
+    /**
+     *@notice Give NFT to auction
+     *@param tokenId identifier NFT token
+     *@param price for sale at auction
+     **/
     function listItem(uint256 tokenId, uint256 price)
         external
         isActive(tokenId)
@@ -92,6 +97,10 @@ contract Marketplace is ReentrancyGuard, Ownable, IERC721Receiver {
         emit ListedForSale(tokenId, price, block.timestamp, owner, msg.sender);
     }
 
+    /**
+     *@notice Buy NFT
+     *@param tokenId identifier NFT token
+     **/
     function buyItem(uint256 tokenId) external nonReentrant {
         SaleOrder storage order = _idToOrder[tokenId];
         require(
@@ -116,6 +125,10 @@ contract Marketplace is ReentrancyGuard, Ownable, IERC721Receiver {
         );
     }
 
+    /**
+     *@notice Close the market and send the token to the buyer
+     *@param tokenId identifier NFT token
+     **/
     function cancel(uint256 tokenId) external nonReentrant {
         SaleOrder storage order = _idToOrder[tokenId];
 
@@ -136,7 +149,12 @@ contract Marketplace is ReentrancyGuard, Ownable, IERC721Receiver {
         emit EventCanceled(tokenId, msg.sender);
     }
 
-    function listItemOnAuction(uint256 tokenId, uint256 minPeice)
+    /**
+     *@notice Create item for sale
+     *@param tokenId place where the NFT is located
+     *@param price address where the NFT was create
+     **/
+    function listItemOnAuction(uint256 tokenId, uint256 minPrice)
         external
         isActive(tokenId)
     {
@@ -146,7 +164,7 @@ contract Marketplace is ReentrancyGuard, Ownable, IERC721Receiver {
         _idToItemStatus[tokenId] = TokenStatus.ONAUCTION;
 
         _idToAuctionOrder[tokenId] = AuctionOrder(
-            minPeice,
+            minPrice,
             block.timestamp,
             0,
             0,
@@ -156,9 +174,14 @@ contract Marketplace is ReentrancyGuard, Ownable, IERC721Receiver {
             AuctionStatus.ACTIVE
         );
 
-        emit StartAuction(tokenId, minPeice, msg.sender, block.timestamp);
+        emit StartAuction(tokenId, minPrice, msg.sender, block.timestamp);
     }
 
+    /**
+     *@notice Make bid for select item
+     *@param tokenId identifier NFT
+     *@param price bid
+     **/
     function makeBid(uint256 tokenId, uint256 price)
         external
         auctionIsActive(tokenId)
@@ -170,19 +193,22 @@ contract Marketplace is ReentrancyGuard, Ownable, IERC721Receiver {
             "Marketplace: Your bid less or equal to current bid!"
         );
 
-        if (order.currentPrice != 0) {
+        if (order.currentPrice != 0)
             ERC20Token.transfer(order.lastBidder, order.currentPrice);
-        }
-
-        ERC20Token.transferFrom(msg.sender, address(this), price);
 
         order.currentPrice = price;
         order.lastBidder = msg.sender;
         order.bidAmount += 1;
 
+        ERC20Token.transferFrom(msg.sender, address(this), price);
+
         emit BidIsMade(tokenId, price, order.bidAmount, order.lastBidder);
     }
 
+    /**
+     *@notice Finish auction and transfer token to winner or last bidder
+     *@param tokenId identifier NFT
+     **/
     function finishAuction(uint256 tokenId)
         external
         auctionIsActive(tokenId)
@@ -218,7 +244,12 @@ contract Marketplace is ReentrancyGuard, Ownable, IERC721Receiver {
         );
     }
 
+    /**
+     *@notice Cancel auction
+     *@param tokenId identifier NFT
+     **/
     function cancelAuction(uint256 tokenId) external nonReentrant {
+        // In the future, it's best to use Error()
         require(
             msg.sender == _idToAuctionOrder[tokenId].owner ||
                 msg.sender == _idToAuctionOrder[tokenId].seller,
@@ -250,6 +281,10 @@ contract Marketplace is ReentrancyGuard, Ownable, IERC721Receiver {
         }
     }
 
+    /**
+     *@notice Burn NFT
+     *@param tokenId identifier NFT
+     **/
     function burn(uint256 tokenId) external isActive(tokenId) {
         address owner = NFT.ownerOf(tokenId);
         require(
@@ -264,6 +299,11 @@ contract Marketplace is ReentrancyGuard, Ownable, IERC721Receiver {
         emit Burned(tokenId, msg.sender, block.timestamp);
     }
 
+    /**
+     *@notice Withdraw ERC20 from a marketplace contract
+     *@param receiver beneficiary's address
+     *@param amount amount of funds sent
+     **/
     function withdrawTokens(address receiver, uint256 amount)
         external
         onlyOwner
@@ -271,16 +311,27 @@ contract Marketplace is ReentrancyGuard, Ownable, IERC721Receiver {
         ERC20Token.transfer(receiver, amount);
     }
 
+    /**
+     *@notice Set new NFT address
+     *@param newNFTAddress new NFT address for exchange
+     **/
     function setNFTAddress(address newNFTAddress) external onlyOwner {
         emit NFTAddressChanged(address(NFT), newNFTAddress);
         NFT = IERC721(newNFTAddress);
     }
 
+    /**
+     *@notice Set new ERC20 address
+     *@param newToken new ERC20 address for exchange
+     **/
     function setERC20Token(address newToken) external onlyOwner {
         emit ERC20AddressChanged(address(ERC20Token), newToken);
         ERC20Token = IERC20(newToken);
     }
 
+    /**
+     *@notice Different get- or set- function
+     **/
     function getNFT() external view returns (address) {
         return address(NFT);
     }
@@ -342,7 +393,7 @@ contract Marketplace is ReentrancyGuard, Ownable, IERC721Receiver {
         );
     }
 
-    function upgradeMintPrice(uint256 _newPrice) public onlyOwner {
+    function setMintPrice(uint256 _newPrice) public onlyOwner {
         uint256 newPrice = _newPrice;
         emit MintPriceUpgraded(_mintPrice, newPrice, block.timestamp);
         _mintPrice = newPrice;
