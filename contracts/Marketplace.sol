@@ -29,7 +29,7 @@ contract Marketplace is ReentrancyGuard, Ownable, IERC721Receiver {
         uint256 newAuctionDuration,
         uint256 newAuctionMinimalBidAmount
     ) {
-        upgradeMintPrice(newPrice);
+        setMintPrice(newPrice);
         setAuctionDuration(newAuctionDuration);
         setAuctionMinimalBidAmount(newAuctionMinimalBidAmount);
     }
